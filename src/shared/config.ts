@@ -58,6 +58,24 @@ export function moduleDatabaseUrl(owner: SchemaOwner): string {
   return readDatabaseUrl(envKeyFor(owner));
 }
 
+/**
+ * ブラウザからの呼び出しを許可するオリジン (カンマ区切り)。
+ *
+ * フロントエンドと API はホスト名が違うので、ブラウザから見ると cross-origin になる。
+ * これは edge 固有の事情ではなく、本番でも同じ構成になりうる本物の関心事なので、
+ * アプリケーション側で CORS を扱う。
+ *
+ * 許可リストを env から受け取るのは、入口のホスト名をコードに書かないため
+ * (docs/conventions/local-environment.md「本番との線引き」)。
+ * 未設定なら空 = ブラウザからの cross-origin 呼び出しを一切許可しない。
+ */
+export function allowedWebOrigins(): readonly string[] {
+  return (process.env.WEB_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+}
+
 /** スキーマとロールを作るための管理接続。アプリケーションからは使わない。 */
 export function adminDatabaseUrl(): string {
   return readDatabaseUrl("DATABASE_URL_ADMIN");

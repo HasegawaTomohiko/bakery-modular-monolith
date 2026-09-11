@@ -54,6 +54,9 @@ services:
     environment:
       <<: *app-env
       PORT: "3000"
+      # フロントエンドと API はホスト名が違うので、ブラウザから見ると cross-origin。
+      # 許可リストはコードに書かず env で渡す (入口のホスト名をアプリに持ち込まない)。
+      WEB_ORIGINS: http://app.bakery.localhost
     networks: [internal, edge]
     labels:
       - traefik.enable=true
