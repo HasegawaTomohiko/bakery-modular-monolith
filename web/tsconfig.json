@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    // vite/client は import.meta.env の型。node は API 側のコード
+    // (型だけ import する src/entrypoints/api.ts) が参照する。
+    "types": ["vite/client", "node"],
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "verbatimModuleSyntax": true,
+    // API 側のコードは相対 import に .ts 拡張子を付ける規約なので、
+    // その型を引くこちら側でも許可が要る。
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "noEmit": true
+  },
+  // ../src は API 側。AppType (hc の RPC 型) を型だけ import するために
+  // プログラムに入る必要があるので、include はこのディレクトリの外まで広げない代わりに
+  // import 先を辿らせる (tsc は import されたファイルを自動でプログラムに含める)。
+  "include": ["src", "vite.config.ts"]
+}

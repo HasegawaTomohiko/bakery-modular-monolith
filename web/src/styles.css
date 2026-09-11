@@ -1,0 +1,334 @@
+/*
+ * 素の CSS。外部 CDN は使わない (ローカル環境は入口以外に外向きの依存を持たない)。
+ *
+ * 狙いは 1 つで、**数字が読めること**。
+ *   - 数値列は等幅の数字 (tabular-nums) で右揃えにし、桁を目で比べられるようにする
+ *   - 色は意味のあるところだけに使う。売れ残り (廃棄ロス) が最も強い色を持つ
+ */
+
+:root {
+  --bg: #f6f4f0;
+  --panel: #ffffff;
+  --ink: #1e1b18;
+  --dim: #6b635c;
+  --line: #e2dcd4;
+  --accent: #8a5a2b;
+  --ok: #1f7a4d;
+  --warn: #a86a00;
+  --bad: #b3261e;
+  --bad-bg: #fdecea;
+  --warn-bg: #fdf3e2;
+  font-family: system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+.app {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+}
+
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--line);
+}
+
+h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.controls input,
+.controls button {
+  font: inherit;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: inherit;
+}
+
+.controls button {
+  cursor: pointer;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+.section {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 18px 18px;
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* どのコンテキストの数字なのかを常に見えるようにしておく。 */
+.source {
+  font-size: 12px;
+  color: var(--dim);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 10px;
+  white-space: nowrap;
+}
+
+.note {
+  margin: 6px 0 12px;
+  font-size: 13px;
+  color: var(--dim);
+}
+
+.dim {
+  color: var(--dim);
+}
+
+.status {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--dim);
+}
+
+.status.error {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--bad);
+  background: var(--bad-bg);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+/* --- サマリのタイル -------------------------------------------------- */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 12px 0 20px;
+}
+
+.tile {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tile-label {
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.tile-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.tile-unit {
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 4px;
+  color: var(--dim);
+}
+
+.tile-hint {
+  font-size: 12px;
+  color: var(--dim);
+}
+
+/* 売れ残り = 廃棄ロス。ここだけは強い色で出す。 */
+.tile-warn {
+  border-color: var(--warn);
+  background: var(--warn-bg);
+}
+
+.tile-warn .tile-value,
+.tile-warn .tile-hint {
+  color: var(--warn);
+}
+
+.tile-bad {
+  border-color: var(--bad);
+  background: var(--bad-bg);
+}
+
+.tile-bad .tile-value,
+.tile-bad .tile-hint {
+  color: var(--bad);
+}
+
+.tile-none .tile-value {
+  color: var(--ok);
+}
+
+/* --- 表 -------------------------------------------------------------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+caption {
+  text-align: left;
+  font-size: 12px;
+  color: var(--dim);
+  padding-bottom: 4px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+thead th {
+  font-size: 12px;
+  color: var(--dim);
+  font-weight: 600;
+  border-bottom: 2px solid var(--line);
+}
+
+tbody th {
+  font-weight: 600;
+}
+
+/* 桁を目で比べられるように、数値列は等幅の数字で右揃え。 */
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+code {
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 13px;
+}
+
+/* --- 廃棄ロスの強調 --------------------------------------------------- */
+
+.waste {
+  position: relative;
+}
+
+.waste-number {
+  position: relative;
+  z-index: 1;
+  font-weight: 700;
+}
+
+/* 棒の長さは「その日いちばん余った商品」を基準にした相対値。 */
+.waste-bar {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  height: 4px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.45;
+}
+
+.waste-none {
+  color: var(--ok);
+}
+
+.waste-warn {
+  color: var(--warn);
+}
+
+.waste-bad {
+  color: var(--bad);
+  font-weight: 700;
+}
+
+/* --- バッジ・アラート -------------------------------------------------- */
+
+.badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: var(--warn-bg);
+  color: var(--warn);
+  border: 1px solid currentColor;
+}
+
+.badge-ok {
+  background: transparent;
+  color: var(--ok);
+}
+
+.badge-alert {
+  background: var(--bad-bg);
+  color: var(--bad);
+  margin: 0 8px 0 0;
+}
+
+.alerts {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+footer {
+  margin-top: 28px;
+  font-size: 12px;
+}

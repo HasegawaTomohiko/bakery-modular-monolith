@@ -1,0 +1,115 @@
+# プロダクト側 compose。本番構造のローカル写像。
+#
+# 規約 (docs/conventions/local-environment.md):
+#   - `ports:` は書かない。入口は edge (Traefik) だけ。CI が強制する。
+#   - 入口に出すサービスは internal と edge の両方に、ミドルウェアは internal のみに参加する。
+#   - 設定はサービスごとにここで持つ。本番の ECS タスク定義単位の設定と構造をそろえる意図。
+name: bakery
+
+networks:
+  # edge compose が所有する。ここでは参照するだけ。
+  edge:
+    external: true
+    name: dev-edge
+  # 誰からも名前で参照されないため固定名は不要。
+  internal: {}
+
+volumes:
+  pgdata:
+  node_modules:
+  web_node_modules:
+
+x-app: &app
+  build:
+    context: .
+    target: dev
+  image: bakery-app:dev
+  volumes:
+    - .:/app
+    # ホストの node_modules を上書きしない。イメージ側の依存が seed される。
+    - node_modules:/app/node_modules
+    - web_node_modules:/app/web/node_modules
+  depends_on:
+    postgres:
+      condition: service_healthy
+  environment: &app-env
+    NODE_ENV: development
+    # 境界の強制 (2/3): DB
+    # モジュールごとに別ロール。自スキーマの権限しか持たないため、
+    # スキーマをまたぐ JOIN と外部キーは物理的に書けない。
+    DATABASE_URL_CATALOG: postgres://bakery_catalog:devpass@postgres:5432/bakery
+    DATABASE_URL_PRODUCTION: postgres://bakery_production:devpass@postgres:5432/bakery
+    DATABASE_URL_INVENTORY: postgres://bakery_inventory:devpass@postgres:5432/bakery
+    DATABASE_URL_PURCHASING: postgres://bakery_purchasing:devpass@postgres:5432/bakery
+    DATABASE_URL_SALES: postgres://bakery_sales:devpass@postgres:5432/bakery
+    # 参照モデル。モジュールではないので outbox を持たず、購読して投影するだけ。
+    DATABASE_URL_READMODEL: postgres://bakery_readmodel:devpass@postgres:5432/bakery
+    # スキーマとロールの作成 (db/bootstrap/) 専用。業務コードからは使わない。
+    DATABASE_URL_ADMIN: postgres://bakery_admin:devpass@postgres:5432/bakery
+
+services:
+  api:
+    <<: *app
+    command: pnpm dev:api
+    environment:
+      <<: *app-env
+      PORT: "3000"
+    networks: [internal, edge]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dev-edge
+      - traefik.http.routers.bakery-api.rule=Host(`api.bakery.localhost`)
+      - traefik.http.routers.bakery-api.entrypoints=web
+      - traefik.http.services.bakery-api.loadbalancer.server.port=3000
+
+  web:
+    <<: *app
+    command: pnpm --filter @bakery/web dev
+    environment:
+      # ベース URL は設定から受け取る。edge 固有のホスト名をコードに書かないため
+      # (docs/conventions/local-environment.md「本番との線引き」)。
+      VITE_API_BASE_URL: http://api.bakery.localhost
+    depends_on: []
+    networks: [internal, edge]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dev-edge
+      - traefik.http.routers.bakery-web.rule=Host(`app.bakery.localhost`)
+      - traefik.http.routers.bakery-web.entrypoints=web
+      - traefik.http.services.bakery-web.loadbalancer.server.port=5173
+
+  worker:
+    <<: *app
+    command: pnpm dev:worker
+    # worker は入口に出さない。HTTP を持たないため。
+    networks: [internal]
+
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: bakery_admin
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: bakery
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bakery_admin -d bakery"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    # ミドルウェアは internal のみ。入口には出さない。
+    networks: [internal]
+
+  # 開発者ツール。必要な時だけ `--profile tools` で起動する。
+  cloudbeaver:
+    image: dbeaver/cloudbeaver:latest
+    profiles: [tools]
+    volumes:
+      - ./.cloudbeaver:/opt/cloudbeaver/workspace
+    networks: [internal, edge]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dev-edge
+      - traefik.http.routers.bakery-cloudbeaver.rule=Host(`cloudbeaver.devtools.bakery.localhost`)
+      - traefik.http.routers.bakery-cloudbeaver.entrypoints=web
+      - traefik.http.services.bakery-cloudbeaver.loadbalancer.server.port=8978

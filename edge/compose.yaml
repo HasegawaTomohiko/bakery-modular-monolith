@@ -1,0 +1,56 @@
+# ローカルの入口 (edge)。
+#
+# - 独立した compose プロジェクト。プロダクトを一切知らない。
+# - ルーティングは Docker ラベルから発見する。
+# - 本番には持ち込まない。ローカルの都合だけのためのもの。
+#
+# 詳細: docs/conventions/local-environment.md
+name: dev-edge
+
+services:
+  traefik:
+    image: traefik:v3
+    restart: unless-stopped
+    # 127.0.0.1 に固定する。開発者ツールの UI は認証なしのものが多く、
+    # 0.0.0.0 だと LAN に DB の中身を晒すため。
+    ports:
+      - "127.0.0.1:80:80"
+    command:
+      - --entrypoints.web.address=:80
+      # 別名ヘッダ (X_Auth_User → X-Auth-User) によるヘッダ偽装を落とす。
+      - --entrypoints.web.http.aliasHeadersStrategy=delete
+      - --providers.docker=true
+      - --providers.docker.network=dev-edge
+      - --providers.docker.exposedbydefault=false
+      - --api.dashboard=true
+      - --log.level=INFO
+      - --accesslog=true
+    labels:
+      # ダッシュボードは「今ローカルで触れるツールのカタログ」として使う。
+      # edge はプロダクトを知らないので bakery 名前空間は使わない。
+      - traefik.enable=true
+      - traefik.http.routers.traefik-dashboard.rule=Host(`traefik.localhost`)
+      - traefik.http.routers.traefik-dashboard.entrypoints=web
+      - traefik.http.routers.traefik-dashboard.service=api@internal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      edge:
+        aliases:
+          # devcontainer から socat で転送する先の名前。
+          - edge
+
+  # 疎通確認専用。`--profile verify` を付けたときだけ起動する。
+  # ホスト / WSL / devcontainer の3環境から同じ URL で届くことを確かめるためだけのもの。
+  whoami:
+    image: traefik/whoami
+    profiles: [verify]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.edge-whoami.rule=Host(`whoami.bakery.localhost`)
+      - traefik.http.routers.edge-whoami.entrypoints=web
+    networks: [edge]
+
+networks:
+  edge:
+    name: dev-edge

@@ -1,0 +1,7 @@
+packages:
+  - "web"
+
+# ビルドスクリプトの実行を許可する依存。既定では pnpm が全て拒否する。
+allowBuilds:
+  esbuild: true
+  "@biomejs/biome": true

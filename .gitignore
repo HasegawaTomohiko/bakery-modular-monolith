@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# 個人用のポート開放など。チーム標準には含めない (docs/conventions/local-environment.md)
+compose.override.yaml
+compose.override.yml
+
+.env
+.env.*
+!.env.example
+
+# コンテナ内で pnpm を動かしたときに出来る
+.pnpm-store/
+.cloudbeaver/

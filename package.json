@@ -1,0 +1,51 @@
+{
+  "name": "bakery",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "dev:api": "tsx watch src/entrypoints/api.ts",
+    "dev:worker": "tsx watch src/entrypoints/worker.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run --project unit",
+    "test:watch": "vitest --project unit",
+    "test:integration": "vitest run --project integration",
+    "migrate": "tsx scripts/migrate.ts",
+    "db:generate:catalog": "drizzle-kit generate --config src/modules/catalog/infra/db/drizzle.config.ts",
+    "db:generate:production": "drizzle-kit generate --config src/modules/production/infra/db/drizzle.config.ts",
+    "db:generate:inventory": "drizzle-kit generate --config src/modules/inventory/infra/db/drizzle.config.ts",
+    "db:generate:purchasing": "drizzle-kit generate --config src/modules/purchasing/infra/db/drizzle.config.ts",
+    "db:generate:sales": "drizzle-kit generate --config src/modules/sales/infra/db/drizzle.config.ts",
+    "db:generate:readmodel": "drizzle-kit generate --config src/readmodel/db/drizzle.config.ts",
+    "check:boundaries": "depcruise src --config .dependency-cruiser.cjs",
+    "check:compose": "tsx scripts/check-compose.ts",
+    "check:migrations": "tsx scripts/check-migrations.ts",
+    "check": "pnpm typecheck && pnpm lint && pnpm check:boundaries && pnpm check:compose && pnpm check:migrations && pnpm test"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "@hono/zod-openapi": "^1.6.3",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.13.7",
+    "pg": "^8.23.0",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.12",
+    "@types/node": "^26.5.0",
+    "@types/pg": "^8.23.1",
+    "dependency-cruiser": "^18.2.0",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.23.13",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.0",
+    "yaml": "^2.9.0"
+  }
+}

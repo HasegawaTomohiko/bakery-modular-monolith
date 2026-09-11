@@ -1,0 +1,7 @@
+# ツールチェーンはここで固定する。ホストと devcontainer が同じ定義を共有する。
+[tools]
+node = "26.7.0"
+pnpm = "11.7.0"
+
+[settings]
+experimental = true

@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.git
+.github
+.devcontainer
+docs
+web/node_modules
+web/dist
+*.tsbuildinfo
+compose.override.yaml

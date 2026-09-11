@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ツールチェーンのバージョンは mise.toml が唯一の情報源。
+      # ホスト・devcontainer・CI で同じ定義を共有する。
+      - uses: jdx/mise-action@v2
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm typecheck
+      - run: pnpm lint
+
+      # 境界の強制 (1/3): コード
+      - run: pnpm check:boundaries
+
+      # ローカル環境の規約: edge 以外に ports: を書かない / ホスト名規約
+      - run: pnpm check:compose
+
+      # 境界の強制 (2/3): DB — マイグレーションが自スキーマ外に触れていないこと
+      - run: pnpm check:migrations
+
+      - run: pnpm test

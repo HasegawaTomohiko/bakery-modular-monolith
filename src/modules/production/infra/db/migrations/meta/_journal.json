@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789044772062,
+      "tag": "0000_clumsy_the_fallen",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789057428779,
+      "tag": "0001_sudden_morg",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789085618600,
+      "tag": "0002_huge_sentinel",
+      "breakpoints": true
+    }
+  ]
+}

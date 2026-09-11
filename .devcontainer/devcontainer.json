@@ -1,0 +1,60 @@
+// devcontainer は「ホスト PC をコンテナに入れたもの」。
+//
+//   - ホストと同列で、サービスネットワーク (internal) の外にいる
+//   - サービスの設定 (env/conf) やミドルウェアの接続情報を一切持たない
+//   - 利用は任意。ホストで開発しても devcontainer で開発しても同じ URL で同じサービスに届く
+//
+// 詳細: docs/conventions/local-environment.md
+{
+  "name": "bakery (host-in-a-container)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
+  // edge が先に起動している必要がある。冪等なのでそのまま毎回実行してよい。
+  // これはホスト側で実行される。
+  "initializeCommand": "docker compose -f edge/compose.yaml up -d",
+
+  "runArgs": [
+    // 入口 (Traefik) と同じネットワークに乗る。プロダクトの internal には乗らない。
+    "--network=dev-edge",
+    // 非 root ユーザーで 80 番を listen するため。
+    "--sysctl",
+    "net.ipv4.ip_unprivileged_port_start=0"
+  ],
+
+  // ホストと同じ絶対パスにマウントする。
+  // docker-outside-of-docker で compose を動かしたとき、bind mount のパスが
+  // ホストから見ても devcontainer から見ても同じ意味になる。
+  "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind,consistency=cached",
+  "workspaceFolder": "${localWorkspaceFolder}",
+
+  "features": {
+    // ホストの docker を使う。devcontainer 自身は「ホスト」なので docker CLI を持つ。
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "moby": false
+    }
+  },
+
+  // nohup は postStartCommand で起動したバックグラウンドプロセスが
+  // 終了させられるのを防ぐため。
+  "postStartCommand": "nohup .devcontainer/edge-forward.sh >/tmp/edge-forward.log 2>&1 &",
+
+  // ツールチェーンの設定のみ。サービスの設定・接続情報はここに一切書かない。
+  "containerEnv": {
+    "MISE_TRUSTED_CONFIG_PATHS": "${localWorkspaceFolder}"
+  },
+
+  "remoteUser": "dev",
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["biomejs.biome"],
+      "settings": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true
+      }
+    }
+  }
+}
